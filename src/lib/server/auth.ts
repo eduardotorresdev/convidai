@@ -18,6 +18,18 @@ export const { handle: authHandle, signIn, signOut } = SvelteKitAuth({
 			clientSecret: env.AUTH_GOOGLE_SECRET
 		})
 	],
+	callbacks: {
+		/*
+		 * Com sessão em banco, o Auth.js NÃO devolve `user.id` na sessão por padrão —
+		 * só name/email/image. Sem isto, `anfitriaoAtual` não acha o id, toda guarda
+		 * de rota conclui "não logado" e o login entra em loop de volta pro /entrar
+		 * com a sessão já criada no banco.
+		 */
+		session({ session, user }) {
+			session.user.id = user.id;
+			return session;
+		}
+	},
 	pages: { signIn: '/entrar' },
 	trustHost: true
 });
