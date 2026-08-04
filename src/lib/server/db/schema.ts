@@ -90,6 +90,12 @@ export const convites = sqliteTable(
 		temaMatiz: real('tema_matiz'),
 		temaCroma: real('tema_croma'),
 		temaModo: text('tema_modo').$type<'claro' | 'escuro'>(),
+		/*
+		 * A segunda cor da arte, a que canta: pinta só os tokens de accent. Nula
+		 * quando a arte é de uma cor só — aí o accent segue a matiz dominante.
+		 */
+		temaAccentMatiz: real('tema_accent_matiz'),
+		temaAccentCroma: real('tema_accent_croma'),
 		/** Prazo de Confirmação. Nulo = aceita Resposta pra sempre. */
 		prazo: integer('prazo', { mode: 'timestamp_ms' }),
 		criadoEm: integer('criado_em', { mode: 'timestamp_ms' }).notNull().$defaultFn(agora)
