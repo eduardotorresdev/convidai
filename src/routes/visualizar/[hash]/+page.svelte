@@ -5,7 +5,9 @@
 	import Campo from '$lib/components/Campo.svelte';
 	import Carta from '$lib/components/Carta.svelte';
 	import Modal from '$lib/components/Modal.svelte';
+	import { abrirPartilha, baixarArte, mensagemDoConvite } from '$lib/compartilhar';
 	import { caminhoDoConvite } from '$lib/ids';
+	import { cssDoTema } from '$lib/tema';
 	import {
 		ROTULO_ESTADO,
 		ehAnonimo,
@@ -24,6 +26,9 @@
 	let apagando = $state(false);
 	let menuAberto = $state(false);
 	let recado = $state('');
+
+	// A prévia se pinta com as cores do Convite — é ela que o Anfitrião confere.
+	const estiloDoTema = $derived(cssDoTema(data.tema));
 
 	const caminho = $derived(caminhoDoConvite(data.convite.hash, data.convite.slug));
 	const linkAberto = $derived(`${data.origem}${caminho}`);
@@ -47,6 +52,30 @@
 		nao: 'border-linha-forte bg-papel text-nao'
 	};
 
+	/*
+	 * A arte vem baixada de véspera pra poder ir anexada na folha de
+	 * compartilhamento: o navigator.share() do iOS exige ser chamado no mesmo
+	 * tick do clique, e um fetch no meio do caminho já mataria a folha. Enquanto
+	 * não chega — ou se falhar — o compartilhamento vai sem anexo e a arte
+	 * aparece pela prévia do link.
+	 */
+	let arte = $state<File | null>(null);
+
+	$effect(() => {
+		const url = `${data.origem}/uploads/${data.convite.imagem}`;
+		const titulo = data.convite.titulo;
+
+		let atual = true;
+		arte = null;
+		void baixarArte(url, titulo).then((arquivo) => {
+			if (atual) arte = arquivo;
+		});
+
+		return () => {
+			atual = false;
+		};
+	});
+
 	function paraCampoData(prazo: Date | null): string {
 		if (!prazo) return '';
 		const mes = String(prazo.getMonth() + 1).padStart(2, '0');
@@ -62,22 +91,27 @@
 	}
 
 	function reenviar(token: string, nome: string) {
-		const url = `${linkAberto}?convidado=${token}`;
-		if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
-			navigator
-				.share({ title: data.convite.titulo, text: `${nome}, você está convidado`, url })
-				.catch(() => {});
+		const mensagem = mensagemDoConvite(data.convite.descricao, `${linkAberto}?convidado=${token}`);
+
+		const partilha = abrirPartilha(data.convite.titulo, mensagem, arte);
+		if (partilha) {
+			partilha.catch(() => {});
 			return;
 		}
+
 		navigator.clipboard
-			?.writeText(url)
-			.then(() => (recado = `Link pessoal de ${nome} copiado.`))
+			?.writeText(mensagem)
+			.then(() => (recado = `Convite de ${nome} copiado.`))
 			.catch(() => (recado = 'Não deu pra copiar automaticamente.'));
 	}
 </script>
 
 <svelte:head>
 	<title>{data.convite.titulo} · Convidai</title>
+
+	{#if estiloDoTema}
+		{@html `<style>${estiloDoTema}</style>`}
+	{/if}
 </svelte:head>
 
 <svelte:window
@@ -248,7 +282,9 @@
 		hash={data.convite.hash}
 		slug={data.convite.slug}
 		titulo={data.convite.titulo}
+		descricao={data.convite.descricao}
 		origem={data.origem}
+		{arte}
 	/>
 
 	<p aria-live="polite" class="text-sm text-suave">{recado}</p>

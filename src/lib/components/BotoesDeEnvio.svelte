@@ -1,10 +1,18 @@
 <script lang="ts">
 	import Botao from './Botao.svelte';
 	import ConvidarModal from './ConvidarModal.svelte';
+	import { abrirPartilha, mensagemDoConvite } from '$lib/compartilhar';
 	import { caminhoDoConvite } from '$lib/ids';
 
-	type Props = { hash: string; slug: string; titulo: string; origem: string };
-	let { hash, slug, titulo, origem }: Props = $props();
+	type Props = {
+		hash: string;
+		slug: string;
+		titulo: string;
+		descricao: string;
+		origem: string;
+		arte: File | null;
+	};
+	let { hash, slug, titulo, descricao, origem, arte }: Props = $props();
 
 	let convidando = $state(false);
 	let recado = $state('');
@@ -12,13 +20,18 @@
 	const linkAberto = $derived(`${origem}${caminhoDoConvite(hash, slug)}`);
 
 	function compartilhar() {
-		if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
-			navigator.share({ title: titulo, text: titulo, url: linkAberto }).catch(() => {});
+		const mensagem = mensagemDoConvite(descricao, linkAberto);
+
+		const partilha = abrirPartilha(titulo, mensagem, arte);
+		if (partilha) {
+			// AbortError é o Anfitrião fechando a folha — não é erro que mereça recado.
+			partilha.catch(() => {});
 			return;
 		}
+
 		navigator.clipboard
-			?.writeText(linkAberto)
-			.then(() => (recado = 'Link aberto copiado.'))
+			?.writeText(mensagem)
+			.then(() => (recado = 'Convite copiado. Cole no WhatsApp.'))
 			.catch(() => (recado = 'Não deu pra copiar. Selecione o endereço acima e copie na mão.'));
 	}
 </script>
@@ -52,6 +65,8 @@
 	{hash}
 	{slug}
 	{titulo}
+	{descricao}
 	{origem}
+	{arte}
 	aoFechar={() => (convidando = false)}
 />

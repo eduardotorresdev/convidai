@@ -3,6 +3,7 @@ import { caminhoDoConvite } from '$lib/ids';
 import { ehAnonimo, prazoVencido } from '$lib/estado';
 import { buscarConvite, registrarAbertura, registrarResposta } from '$lib/server/convites';
 import { RESPOSTAS, type Resposta } from '$lib/server/db/schema';
+import { temaDoConvite } from '$lib/tema';
 import type { Actions, PageServerLoad } from './$types';
 
 function ehResposta(valor: unknown): valor is Resposta {
@@ -39,6 +40,8 @@ export const load: PageServerLoad = ({ params, url, locals }) => {
 			imagem: convite.imagem,
 			prazo: convite.prazo
 		},
+		// A página inteira se pinta com a cor da arte — nulo cai no tema padrão.
+		tema: temaDoConvite(convite),
 		// Nunca "Anônimo N" aqui: esse vocabulário é do Relatório, não da pessoa.
 		nomeConvidado: ehAnonimo(convidado) ? null : convidado.nome,
 		resposta: meu ? convidado.resposta : null,

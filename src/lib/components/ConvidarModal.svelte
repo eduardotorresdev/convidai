@@ -4,6 +4,7 @@
 	import Botao from './Botao.svelte';
 	import Campo from './Campo.svelte';
 	import Modal from './Modal.svelte';
+	import { abrirPartilha, mensagemDoConvite } from '$lib/compartilhar';
 	import { caminhoDoConvite, novoTokenConvidado } from '$lib/ids';
 
 	type Props = {
@@ -11,11 +12,22 @@
 		hash: string;
 		slug: string;
 		titulo: string;
+		descricao: string;
 		origem: string;
+		arte: File | null;
 		aoFechar: () => void;
 	};
 
-	let { aberto = $bindable(), hash, slug, titulo, origem, aoFechar }: Props = $props();
+	let {
+		aberto = $bindable(),
+		hash,
+		slug,
+		titulo,
+		descricao,
+		origem,
+		arte,
+		aoFechar
+	}: Props = $props();
 
 	let nome = $state('');
 	let erroNome = $state('');
@@ -66,7 +78,7 @@
 			if (partilhou) {
 				aoFechar();
 			} else {
-				aviso = 'Convidado criado e link pessoal copiado. Cole no WhatsApp dele.';
+				aviso = 'Convidado criado e convite copiado. Cole no WhatsApp dele.';
 			}
 		} catch {
 			falha = { token, nome: nomeConvidado };
@@ -91,24 +103,22 @@
 		aviso = '';
 
 		const token = novoTokenConvidado();
-		const url = linkPessoal(token);
+		const mensagem = mensagemDoConvite(descricao, linkPessoal(token));
 
 		/*
 		 * ARMADILHA: no iOS Safari o navigator.share() só abre se for chamado no
 		 * mesmo tick do gesto. Nenhum await pode vir antes desta linha — por isso o
-		 * token nasce no cliente e o POST vai depois, em paralelo.
+		 * token nasce no cliente, a arte já veio baixada de fora e o POST vai
+		 * depois, em paralelo.
 		 */
-		const partilha =
-			typeof navigator !== 'undefined' && typeof navigator.share === 'function'
-				? navigator.share({ title: titulo, text: `${limpo}, você está convidado: ${titulo}`, url })
-				: null;
+		const partilha = abrirPartilha(titulo, mensagem, arte);
 
 		if (partilha) {
 			// AbortError é o usuário fechando a folha — o Convidado já foi criado
 			// de propósito e o Anfitrião reenvia pela lista quando quiser.
 			partilha.catch(() => {});
 		} else {
-			navigator.clipboard?.writeText(url).catch(() => {});
+			navigator.clipboard?.writeText(mensagem).catch(() => {});
 		}
 
 		void acompanhar(token, limpo, partilha !== null);

@@ -1,6 +1,14 @@
 import type { AdapterAccountType } from '@auth/core/adapters';
 import { relations, sql } from 'drizzle-orm';
-import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import {
+	index,
+	integer,
+	primaryKey,
+	real,
+	sqliteTable,
+	text,
+	uniqueIndex
+} from 'drizzle-orm/sqlite-core';
 
 const agora = () => new Date();
 
@@ -74,6 +82,14 @@ export const convites = sqliteTable(
 		descricao: text('descricao').notNull().default(''),
 		/** Nome do arquivo dentro de `uploads/` — sempre 1080x1080 .webp. */
 		imagem: text('imagem').notNull(),
+		/*
+		 * Tema destilado da arte, em OKLCH. Nulo = arte sem cor de que se falar,
+		 * ou Convite anterior a este recurso: a página cai no tema padrão. Só a
+		 * matiz vem da imagem; a luminosidade de cada token é fixa no código.
+		 */
+		temaMatiz: real('tema_matiz'),
+		temaCroma: real('tema_croma'),
+		temaModo: text('tema_modo').$type<'claro' | 'escuro'>(),
 		/** Prazo de Confirmação. Nulo = aceita Resposta pra sempre. */
 		prazo: integer('prazo', { mode: 'timestamp_ms' }),
 		criadoEm: integer('criado_em', { mode: 'timestamp_ms' }).notNull().$defaultFn(agora)

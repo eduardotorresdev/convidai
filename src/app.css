@@ -27,6 +27,14 @@
 	--color-sim-fraca: #ecf3ef;
 	--color-nao: #6f675e;
 
+	/*
+	 * Texto por cima do accent e do verde. Existe como token porque o Convite
+	 * repinta a paleta com a cor da arte: num tema claro o accent clareia e
+	 * branco fixo sumiria por cima dele.
+	 */
+	--color-sobre-accent: #ffffff;
+	--color-sobre-sim: #ffffff;
+
 	--font-display: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
 	--font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
 

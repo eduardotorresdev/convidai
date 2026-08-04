@@ -4,6 +4,8 @@ import { join, resolve } from 'node:path';
 import sharp from 'sharp';
 import { env } from '$env/dynamic/private';
 import { novoHash } from '$lib/ids';
+import type { Tema } from '$lib/tema';
+import { extrairTema } from '$lib/server/paleta';
 
 /**
  * Imagens vivem no filesystem, não no banco. Isso amarra o deploy a um host com
@@ -26,14 +28,19 @@ export function imagemExiste(nomeArquivo: string): boolean {
 }
 
 /**
- * Grava a arte de um Convite como 1080x1080 .webp.
+ * Grava a arte de um Convite como 1080x1080 .webp e destila o tema dela.
  *
  * O recorte 1:1 já foi feito pelo cliente; aqui é rede de segurança contra
  * cliente com bug ou POST forjado — nunca confiamos nas dimensões recebidas.
  * O nome do arquivo é aleatório e não deriva do hash do Convite: trocar a arte
  * precisa gerar uma URL nova, senão o cache do navegador serve a imagem velha.
+ *
+ * O tema sai do webp já cortado, e não do original: é essa a arte que a pessoa
+ * vai ver ao lado das cores.
  */
-export async function salvarImagem(entrada: ArrayBuffer): Promise<string> {
+export async function salvarImagem(
+	entrada: ArrayBuffer
+): Promise<{ arquivo: string; tema: Tema | null }> {
 	await mkdir(DIR_UPLOADS, { recursive: true });
 
 	const webp = await sharp(Buffer.from(entrada))
@@ -42,9 +49,9 @@ export async function salvarImagem(entrada: ArrayBuffer): Promise<string> {
 		.webp({ quality: 82 })
 		.toBuffer();
 
-	const nomeArquivo = `${novoHash(20)}.webp`;
-	await writeFile(join(DIR_UPLOADS, nomeArquivo), webp);
-	return nomeArquivo;
+	const arquivo = `${novoHash(20)}.webp`;
+	await writeFile(join(DIR_UPLOADS, arquivo), webp);
+	return { arquivo, tema: await extrairTema(webp) };
 }
 
 export async function apagarImagem(nomeArquivo: string): Promise<void> {

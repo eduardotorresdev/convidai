@@ -19,10 +19,11 @@
 		'disabled:cursor-not-allowed disabled:opacity-45';
 
 	const tons: Record<Tom, string> = {
-		accent: 'bg-terracota text-white hover:bg-terracota-forte active:bg-terracota-forte',
+		accent:
+			'bg-terracota text-sobre-accent hover:bg-terracota-forte active:bg-terracota-forte',
 		secundario: 'border border-linha-forte bg-papel text-tinta hover:bg-creme',
 		fantasma: 'text-suave hover:bg-terracota-fraca hover:text-terracota',
-		sim: 'bg-sim text-white hover:brightness-110',
+		sim: 'bg-sim text-sobre-sim hover:brightness-110',
 		nao: 'border border-linha-forte bg-papel text-tinta hover:bg-creme'
 	};
 </script>

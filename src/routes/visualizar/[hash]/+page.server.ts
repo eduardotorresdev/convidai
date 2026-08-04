@@ -4,6 +4,8 @@ import { db, schema } from '$lib/server/db';
 import { exigirAnfitriao } from '$lib/server/sessao';
 import { criarConvidado, exigirConviteDoAnfitriao, listarConvidados, slugEmUso } from '$lib/server/convites';
 import { apagarImagem, salvarImagem, TAMANHO_MAX } from '$lib/server/uploads';
+import { colunasDoTema } from '$lib/server/paleta';
+import { temaDoConvite } from '$lib/tema';
 import { novoHash, paraSlug } from '$lib/ids';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -17,6 +19,8 @@ export const load: PageServerLoad = async (event) => {
 
 	return {
 		convite,
+		// A prévia usa as mesmas cores que o Convidado vai ver.
+		tema: temaDoConvite(convite),
 		convidados: listarConvidados(convite.hash),
 		// O cliente monta Link Pessoal e Link Aberto absolutos pra jogar no share.
 		origem: event.url.origin
@@ -93,6 +97,8 @@ export const actions: Actions = {
 		if (!prazo.ok) return fail(400, { acao: 'editar', erro: 'Data de prazo inválida.' });
 
 		let nomeArquivo = convite.imagem;
+		// Sem arte nova, o tema atual fica de pé: quem manda nele é a imagem.
+		let tema = colunasDoTema(temaDoConvite(convite));
 		const trocouArte = imagem instanceof File && imagem.size > 0;
 
 		if (trocouArte) {
@@ -102,7 +108,9 @@ export const actions: Actions = {
 			if (imagem.size > TAMANHO_MAX) {
 				return fail(400, { acao: 'editar', erro: 'A imagem precisa ter no máximo 8 MB.' });
 			}
-			nomeArquivo = await salvarImagem(await imagem.arrayBuffer());
+			const arte = await salvarImagem(await imagem.arrayBuffer());
+			nomeArquivo = arte.arquivo;
+			tema = colunasDoTema(arte.tema);
 		}
 
 		db.update(schema.convites)
@@ -111,6 +119,7 @@ export const actions: Actions = {
 				descricao,
 				prazo: prazo.prazo,
 				imagem: nomeArquivo,
+				...tema,
 				slug: slugParaTitulo(titulo, convite.slug)
 			})
 			.where(eq(schema.convites.hash, convite.hash))

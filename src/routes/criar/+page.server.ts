@@ -3,6 +3,7 @@ import { novoHash, paraSlug } from '$lib/ids';
 import { db, schema } from '$lib/server/db';
 import { slugEmUso } from '$lib/server/convites';
 import { exigirAnfitriao } from '$lib/server/sessao';
+import { colunasDoTema } from '$lib/server/paleta';
 import { salvarImagem, TAMANHO_MAX } from '$lib/server/uploads';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -75,7 +76,7 @@ export const actions: Actions = {
 		let slug = base;
 		while (slugEmUso(slug)) slug = `${base}-${novoHash(4)}`;
 
-		const nomeArquivo = await salvarImagem(await (imagem as File).arrayBuffer());
+		const arte = await salvarImagem(await (imagem as File).arrayBuffer());
 
 		db.insert(schema.convites)
 			.values({
@@ -84,7 +85,8 @@ export const actions: Actions = {
 				anfitriaoId: anfitriao.id,
 				titulo,
 				descricao,
-				imagem: nomeArquivo,
+				imagem: arte.arquivo,
+				...colunasDoTema(arte.tema),
 				prazo
 			})
 			.run();
