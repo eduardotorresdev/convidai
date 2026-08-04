@@ -1,0 +1,1 @@
+DROP INDEX `uniq_anonimo_por_visitante`;

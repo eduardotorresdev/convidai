@@ -35,7 +35,10 @@
 	const totais = $derived(totalizar(data.convidados));
 	const vencido = $derived(prazoVencido(data.convite.prazo));
 
-	/** A numeração dos Anônimos é posicional — o Anfitrião nunca sabe quem são. */
+	/*
+	 * Anônimos só existem em Convites antigos, de quando responder pelo Link
+	 * Aberto não pedia nome. A numeração deles é posicional.
+	 */
 	const listados = $derived.by(() => {
 		let anonimos = 0;
 		return data.convidados.map((c) => {

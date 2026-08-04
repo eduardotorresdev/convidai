@@ -2,7 +2,13 @@ import { and, eq } from 'drizzle-orm';
 import { fail, redirect } from '@sveltejs/kit';
 import { db, schema } from '$lib/server/db';
 import { exigirAnfitriao } from '$lib/server/sessao';
-import { criarConvidado, exigirConviteDoAnfitriao, listarConvidados, slugEmUso } from '$lib/server/convites';
+import {
+	criarConvidado,
+	exigirConviteDoAnfitriao,
+	listarConvidados,
+	MAX_NOME,
+	slugEmUso
+} from '$lib/server/convites';
 import { apagarImagem, salvarImagem, TAMANHO_MAX } from '$lib/server/uploads';
 import { colunasDoTema } from '$lib/server/paleta';
 import { temaDoConvite } from '$lib/tema';
@@ -11,7 +17,6 @@ import type { Actions, PageServerLoad } from './$types';
 
 const MAX_TITULO = 80;
 const MAX_DESCRICAO = 600;
-const MAX_NOME = 60;
 
 export const load: PageServerLoad = async (event) => {
 	const anfitriao = await exigirAnfitriao(event);

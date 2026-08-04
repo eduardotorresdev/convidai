@@ -24,18 +24,21 @@ _Avoid_: Deadline, data limite, expiração, RSVP by
 ### Quem recebe
 
 **Convidado**:
-Uma pessoa registrada num Convite, tenha sido nomeada pelo Anfitrião ou não.
-Existe a partir do momento em que é criada — antes mesmo de abrir o Convite.
+Uma pessoa registrada num Convite, sempre com nome e sempre dona de um Link
+Pessoal. Nasce quando o Anfitrião a convida, ou quando ela mesma se apresenta ao
+responder.
 _Avoid_: Guest, participante, pessoa
 
 **Convidado Nomeado**:
-Um Convidado criado pelo Anfitrião com um nome, dono de um Link Pessoal próprio.
+Um Convidado criado pelo Anfitrião, que escolheu o nome e manda o Link Pessoal
+para a pessoa certa. É o único caso em que o nome na lista tem garantia.
 _Avoid_: Convidado identificado, convidado real
 
-**Convidado Anônimo**:
-Um Convidado sem nome, criado automaticamente por quem responde sem um Link
-Pessoal disponível. Conta nos números, mas o Anfitrião nunca sabe quem é.
-_Avoid_: Convidado desconhecido, guest anônimo, visitante
+**Convidado que se nomeou**:
+Um Convidado criado por quem responde sem ter um Link Pessoal disponível,
+escrevendo o próprio nome na hora. Ninguém confere esse nome: ele pode vir
+repetido ou inventado, e o Anfitrião sabe disso.
+_Avoid_: Convidado anônimo, autodeclarado, guest anônimo, visitante
 
 **Visitante**:
 A identidade de um navegador específico, e não de uma pessoa. Dois navegadores
@@ -53,14 +56,20 @@ _Avoid_: Link com hash, link rastreado, link único
 
 **Link Aberto**:
 O endereço de um Convite sem identificação de Convidado. Quem responde por ele
-vira um Convidado Anônimo.
+escreve o próprio nome e vira um Convidado ali mesmo.
 _Avoid_: Link puro, link genérico, link público
+
+**Vínculo**:
+O token de Convidado guardado no navegador de quem se nomeou respondendo. Faz o
+papel do Link Pessoal que ninguém mandou: com ele, reabrir o Link Aberto chega ao
+Convite já identificado.
+_Avoid_: Sessão do convidado, lembrar-me, cookie
 
 **Reivindicação**:
 O ato de um Visitante tomar posse do Link Pessoal de um Convidado Nomeado, o que
 acontece na primeira Resposta e nunca mais se desfaz. Quem responder depois pelo
-mesmo Link Pessoal vira um Convidado Anônimo.
-_Avoid_: Claim, associação, vínculo, lock
+mesmo Link Pessoal se nomeia e vira um Convidado próprio.
+_Avoid_: Claim, associação, lock
 
 ### O que se mede
 
@@ -71,7 +80,9 @@ _Avoid_: RSVP, confirmação, presença
 
 **Abertura**:
 O registro de que um Convidado teve seu Convite aberto ao menos uma vez.
-Independe de haver Resposta, e é o que separa "não viu" de "viu e ignorou".
+Independe de haver Resposta, e é o que separa "não viu" de "viu e ignorou". Só
+existe onde já existe Convidado: quem espia o Link Aberto e vai embora sem
+responder não deixa rastro nenhum.
 _Avoid_: Visualização, view, acesso, impressão
 
 **Relatório**:

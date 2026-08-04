@@ -15,6 +15,12 @@ export const ROTULO_ESTADO: Record<EstadoConvidado, string> = {
 	nao: 'Não vai'
 };
 
+/*
+ * Todo Convidado novo tem nome — o do Anfitrião ou o que a própria pessoa
+ * escreveu ao responder. Isto aqui é para as linhas gravadas antes disso, quando
+ * responder pelo Link Aberto rendia um Convidado Anônimo. Não some do código
+ * enquanto elas existirem nos bancos em produção.
+ */
 export function ehAnonimo(c: Pick<Convidado, 'nome'>): boolean {
 	return c.nome === null || c.nome === '';
 }

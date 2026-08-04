@@ -15,6 +15,20 @@
       "when": 1785865461854,
       "tag": "0001_tema_do_convite",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1785866941278,
+      "tag": "0002_fim_do_convidado_anonimo",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1785867016986,
+      "tag": "0003_dapper_jazinda",
+      "breakpoints": true
     }
   ]
 }

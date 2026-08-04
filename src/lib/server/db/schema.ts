@@ -1,14 +1,6 @@
 import type { AdapterAccountType } from '@auth/core/adapters';
-import { relations, sql } from 'drizzle-orm';
-import {
-	index,
-	integer,
-	primaryKey,
-	real,
-	sqliteTable,
-	text,
-	uniqueIndex
-} from 'drizzle-orm/sqlite-core';
+import { relations } from 'drizzle-orm';
+import { index, integer, primaryKey, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 const agora = () => new Date();
 
@@ -114,7 +106,10 @@ export const convidados = sqliteTable(
 		conviteHash: text('convite_hash')
 			.notNull()
 			.references(() => convites.hash, { onDelete: 'cascade' }),
-		/** Nulo = Convidado Anônimo. */
+		/**
+		 * Nomeado pelo Anfitrião no Convidar, ou pelo próprio Convidado ao responder
+		 * pelo Link Aberto. Nulo só nas linhas anteriores ao fim do Convidado Anônimo.
+		 */
 		nome: text('nome'),
 		/**
 		 * Id do Visitante que Reivindicou este Convidado. A Reivindicação acontece
@@ -127,17 +122,13 @@ export const convidados = sqliteTable(
 		abertoEm: integer('aberto_em', { mode: 'timestamp_ms' }),
 		criadoEm: integer('criado_em', { mode: 'timestamp_ms' }).notNull().$defaultFn(agora)
 	},
-	(t) => [
-		index('idx_convidados_convite').on(t.conviteHash, t.criadoEm),
-		/*
-		 * Um Visitante rende no máximo um Convidado Anônimo por Convite — é o que
-		 * impede resposta dupla pelo Link Aberto. Convidados Nomeados ficam de fora
-		 * do índice de propósito: um mesmo celular pode Reivindicar a mãe e o pai.
-		 */
-		uniqueIndex('uniq_anonimo_por_visitante')
-			.on(t.conviteHash, t.reivindicadoPor)
-			.where(sql`nome is null`)
-	]
+	/*
+	 * Sem índice por Visitante: quem responde pelo Link Aberto vira um Convidado
+	 * com token próprio, e é esse token — memorizado no dispositivo — que impede a
+	 * resposta dupla. Um mesmo celular pode ter vários Convidados no mesmo Convite
+	 * de propósito: o telefone da casa responde pela mãe e pelo pai.
+	 */
+	(t) => [index('idx_convidados_convite').on(t.conviteHash, t.criadoEm)]
 );
 
 export const convitesRelations = relations(convites, ({ one, many }) => ({

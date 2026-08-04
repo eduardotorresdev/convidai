@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import { tick } from 'svelte';
 	import Botao from '$lib/components/Botao.svelte';
+	import Campo from '$lib/components/Campo.svelte';
 	import Carta from '$lib/components/Carta.svelte';
 	import { formatarPrazo } from '$lib/estado';
 	import { paraHtmlWhatsApp } from '$lib/formatacao';
@@ -14,12 +15,30 @@
 
 	const convite = $derived(data.convite);
 
-	/** A resposta recém-gravada manda sobre a que veio do load. */
-	const resposta = $derived(form && 'resposta' in form ? form.resposta : data.resposta);
-	const virouAnonimo = $derived(Boolean(form && 'virouAnonimo' in form && form.virouAnonimo));
+	// A Resposta bem-sucedida termina em redirect pro Link Pessoal do Convidado,
+	// então ela sempre chega pelo load — `form` aqui só carrega recusa.
+	const resposta = $derived(data.resposta);
 	const prazoVencido = $derived(
 		data.venceu || Boolean(form && 'motivo' in form && form.motivo === 'prazo_vencido')
 	);
+
+	/*
+	 * Sem Convidado próprio, responder é também se apresentar: o nome digitado
+	 * aqui é o que o Anfitrião vai ver na lista, e sem ele não há a quem atribuir
+	 * a Resposta. Por isso os dois botões só destravam depois de preenchido.
+	 */
+	// Só o valor inicial mesmo: quem digitou e errou é quem está sem JS, e nesse
+	// caminho a página volta renderizada do servidor com o nome de volta no campo.
+	// svelte-ignore state_referenced_locally
+	let nome = $state(form && 'nome' in form ? String(form.nome ?? '') : '');
+	const erroNome = $derived(
+		form && 'motivo' in form && form.motivo === 'nome_obrigatorio'
+			? 'Escreva o seu nome para responder.'
+			: form && 'motivo' in form && form.motivo === 'nome_longo'
+				? 'O nome pode ter até 60 caracteres.'
+				: ''
+	);
+	const faltaNome = $derived(data.precisaNome && nome.trim() === '');
 
 	let trocando = $state(false);
 	let enviando = $state(false);
@@ -27,7 +46,7 @@
 	/** Fonte única da regra: quando os dois botões de RSVP aparecem. */
 	const mostrandoBotoes = $derived(!prazoVencido && (resposta === null || trocando));
 
-	let caixaDosBotoes = $state<HTMLDivElement | null>(null);
+	let caixaDosBotoes = $state<HTMLFormElement | null>(null);
 
 	/** Sem isso o clique destrói o próprio botão focado e o foco cai no <body>. */
 	async function mudarResposta() {
@@ -159,31 +178,68 @@
 				<Botao tom="fantasma" onclick={mudarResposta}>Mudar minha resposta</Botao>
 			</Carta>
 		{:else}
-			<div bind:this={caixaDosBotoes} class="flex flex-col gap-3">
-				<!--
-					Dois <form> separados, com a resposta em input hidden: assim o RSVP
-					funciona no WebView do WhatsApp mesmo que o JS não carregue, sem
-					depender do value do botão submetido.
-				-->
-				{#each [{ valor: 'sim', rotulo: 'Sim, eu vou!', tom: 'sim' }, { valor: 'nao', rotulo: 'Não poderei ir', tom: 'nao' }] as const as opcao (opcao.valor)}
-					<form method="POST" action="?/responder" use:enhance={aoEnviar}>
-						<input type="hidden" name="resposta" value={opcao.valor} />
-						<input type="hidden" name="token" value={data.token ?? ''} />
-						<Botao type="submit" tom={opcao.tom} largo disabled={enviando}>
+			<!--
+				Um <form> só, com a resposta no value do botão: o campo de nome pertence
+				a um form e não pode ser compartilhado por dois. Sem JS continua de pé —
+				o WebView do WhatsApp manda o value do botão submetido normalmente, e o
+				`required` do input segura o envio sem nome.
+			-->
+			<form
+				method="POST"
+				action="?/responder"
+				use:enhance={aoEnviar}
+				bind:this={caixaDosBotoes}
+				class="flex flex-col gap-4"
+			>
+				<input type="hidden" name="token" value={data.token ?? ''} />
+
+				{#if data.precisaNome}
+					<Campo
+						rotulo="Como é o seu nome?"
+						para="nome-resposta"
+						dica="É assim que você vai aparecer para quem convidou."
+						erro={erroNome}
+					>
+						<input
+							id="nome-resposta"
+							name="nome"
+							type="text"
+							required
+							autocomplete="name"
+							maxlength="60"
+							bind:value={nome}
+							aria-describedby="nome-resposta-dica"
+							class="min-h-12 w-full rounded-[var(--radius-controle)] border border-linha-forte
+							       bg-papel px-4 text-tinta placeholder:text-suave/70"
+							placeholder="Ex.: Marta Ribeiro"
+						/>
+					</Campo>
+				{/if}
+
+				<div class="flex flex-col gap-3">
+					{#each [{ valor: 'sim', rotulo: 'Sim, eu vou!', tom: 'sim' }, { valor: 'nao', rotulo: 'Não poderei ir', tom: 'nao' }] as const as opcao (opcao.valor)}
+						<Botao
+							type="submit"
+							name="resposta"
+							value={opcao.valor}
+							tom={opcao.tom}
+							largo
+							disabled={enviando || faltaNome}
+						>
 							{opcao.rotulo}
 						</Botao>
-					</form>
-				{/each}
-			</div>
+					{/each}
+				</div>
+			</form>
 		{/if}
 
-		{#if virouAnonimo}
+		{#if data.linkJaUsado}
 			<p
 				role="status"
 				class="rounded-[var(--radius-controle)] border border-linha bg-terracota-fraca px-4 py-3 text-sm/relaxed text-tinta"
 			>
-				Este link pessoal já tinha sido usado em outro aparelho, então guardamos a sua resposta sem
-				nome. Ela continua contando — só não dá pra saber que foi você.
+				Este link pessoal já tinha sido usado em outro aparelho, então guardamos a sua resposta em
+				separado, com o nome que você escreveu. Ela continua contando.
 			</p>
 		{/if}
 

@@ -5,7 +5,7 @@ rastreável por pessoa.
 
 O vocabulário do domínio está em [CONTEXT.md](./CONTEXT.md) e é usado literalmente no código —
 `Convidado`, `Reivindicação`, `Abertura` e `Anfitrião` significam ali exatamente o que significam
-aqui. Duas decisões que parecem bug e não são estão registradas em [docs/adr](./docs/adr).
+aqui. As decisões que parecem bug e não são estão registradas em [docs/adr](./docs/adr).
 
 ## Rodando
 

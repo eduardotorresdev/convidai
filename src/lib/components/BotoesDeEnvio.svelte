@@ -51,9 +51,10 @@
 				aria-hidden="true"
 				class="absolute -top-1 left-1/2 size-3 -translate-x-1/2 rotate-45 rounded-[2px] bg-terracota-fraca"
 			></span>
-			<strong class="font-semibold">O link aberto não identifica ninguém.</strong>
-			Quem responder por ele entra na sua lista como anônimo, e você nunca saberá quem foi. Para saber
-			quem confirmou, use <strong class="font-semibold">Convidar</strong> e mande um link por pessoa.
+			<strong class="font-semibold">No link aberto, o nome é quem responde que escreve.</strong>
+			Ele entra na sua lista com esse nome, que ninguém confere — pode vir repetido ou inventado. Para
+			ter certeza de quem respondeu o quê, use <strong class="font-semibold">Convidar</strong> e mande
+			um link por pessoa.
 		</div>
 	</div>
 
