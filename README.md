@@ -41,13 +41,8 @@ público é o Link Pessoal de um Convidado Nomeado.
 
 ## Deploy
 
-`adapter-node`, e **precisa de disco persistente** — as artes ficam no filesystem. Vercel, Netlify e
+No ar em <https://convites.celebre.digital>, como app Dokku. Push na `main` publica.
+Detalhes, operação e backup em [docs/DEPLOY.md](./docs/DEPLOY.md).
+
+Precisa de **disco persistente** — banco e artes ficam no filesystem, então Vercel, Netlify e
 Cloudflare não servem. Veja [ADR 0002](./docs/adr/0002-imagens-no-filesystem.md).
-
-```sh
-npm run build
-node build
-```
-
-Variáveis: `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `DATABASE_URL`, `UPLOADS_DIR`,
-`ORIGIN` (exigida pelo adapter-node em produção).
