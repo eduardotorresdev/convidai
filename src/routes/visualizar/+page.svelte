@@ -20,6 +20,13 @@
 	<div class="flex flex-wrap items-center gap-x-2 text-sm text-suave">
 		<span>{data.anfitriao.nome}</span>
 		<span aria-hidden="true">·</span>
+		<a
+			href="/conta"
+			class="-mx-2 flex min-h-12 items-center rounded-[var(--radius-controle)] px-2 underline underline-offset-2 hover:text-terracota"
+		>
+			Senha
+		</a>
+		<span aria-hidden="true">·</span>
 		<form method="POST" action="?/sair">
 			<input type="hidden" name="redirectTo" value="/" />
 			<button

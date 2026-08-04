@@ -1,9 +1,24 @@
 import { DrizzleAdapter } from '@auth/drizzle-adapter';
+import Credentials from '@auth/sveltekit/providers/credentials';
 import Google from '@auth/sveltekit/providers/google';
 import { SvelteKitAuth } from '@auth/sveltekit';
+import { eq } from 'drizzle-orm';
 import { env } from '$env/dynamic/private';
 import { db } from './db';
+import { conferir } from './senha';
 import { accounts, sessions, users, verificationTokens } from './db/schema';
+
+/**
+ * Senha recusada não volta do `signIn` como redirect: o @auth/sveltekit deixa a
+ * exceção do @auth/core subir, e sem filtrar isto a tela de login responde 500.
+ * O `type` é o campo que todo AuthError carrega — checá-lo evita importar da
+ * árvore interna do @auth/core e evita engolir erro de verdade.
+ */
+export function ehCredencialRecusada(erro: unknown): boolean {
+	return (
+		erro instanceof Error && 'type' in erro && (erro as { type?: string }).type === 'CredentialsSignin'
+	);
+}
 
 export const { handle: authHandle, signIn, signOut } = SvelteKitAuth({
 	adapter: DrizzleAdapter(db, {
@@ -12,33 +27,68 @@ export const { handle: authHandle, signIn, signOut } = SvelteKitAuth({
 		sessionsTable: sessions,
 		verificationTokensTable: verificationTokens
 	}),
+	/*
+	 * Sessão em JWT, e não em banco, porque o provider Credentials do Auth.js só
+	 * funciona assim: ele não passa pelo adapter e não teria linha de sessão pra
+	 * criar. O adapter continua valendo pro Google — user e account seguem no
+	 * banco; é só a tabela `session` que ficou ociosa.
+	 */
+	session: { strategy: 'jwt' },
 	providers: [
 		Google({
 			clientId: env.AUTH_GOOGLE_ID,
 			clientSecret: env.AUTH_GOOGLE_SECRET
+		}),
+		Credentials({
+			credentials: { email: {}, senha: {} },
+			/*
+			 * Devolver null é a única resposta de fracasso: e-mail inexistente, conta
+			 * sem senha e senha errada saem iguais daqui. Distinguir os casos
+			 * entregaria de graça a lista de quem tem conta no Convidai.
+			 */
+			async authorize(credenciais) {
+				const email = String(credenciais?.email ?? '')
+					.trim()
+					.toLowerCase();
+				const senha = String(credenciais?.senha ?? '');
+				if (!email || !senha) return null;
+
+				const pessoa = db.select().from(users).where(eq(users.email, email)).get();
+				if (!pessoa) return null;
+				if (!(await conferir(senha, pessoa.senha))) return null;
+
+				return { id: pessoa.id, name: pessoa.name, email: pessoa.email, image: pessoa.image };
+			}
 		})
 	],
 	callbacks: {
 		/*
-		 * Com sessão em banco, o Auth.js NÃO devolve `user.id` na sessão por padrão —
-		 * só name/email/image. Sem isto, `anfitriaoAtual` não acha o id, toda guarda
-		 * de rota conclui "não logado" e o login entra em loop de volta pro /entrar
-		 * com a sessão já criada no banco.
+		 * `user` só chega na passada do login; nas seguintes o token já vem montado.
+		 * Sem gravar o id aqui, `anfitriaoAtual` não o acha, toda guarda de rota
+		 * conclui "não logado" e o login entra em loop de volta pro /entrar.
 		 */
-		session({ session, user }) {
-			/*
-			 * Monta a sessão do zero em vez de mutar a recebida: a sessão do adapter
-			 * carrega o sessionToken, e /auth/session é um endpoint público — devolver
-			 * o objeto inteiro entregaria o token pro JavaScript da página, anulando o
-			 * httpOnly do cookie.
-			 */
+		jwt({ token, user }) {
+			if (user) {
+				token.sub = user.id;
+				token.name = user.name;
+				token.email = user.email;
+				token.picture = user.image;
+			}
+			return token;
+		},
+		/*
+		 * Monta a sessão do zero em vez de mutar a recebida: /auth/session é um
+		 * endpoint público, e devolver o objeto inteiro entregaria pro JavaScript
+		 * da página campos que só o cookie httpOnly deveria carregar.
+		 */
+		session({ session, token }) {
 			return {
 				expires: session.expires,
 				user: {
-					id: user.id,
-					name: user.name,
-					email: user.email,
-					image: user.image
+					id: token.sub as string,
+					name: token.name ?? null,
+					email: token.email ?? '',
+					image: token.picture ?? null
 				}
 			};
 		}

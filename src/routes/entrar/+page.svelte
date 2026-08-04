@@ -1,23 +1,71 @@
 <script lang="ts">
 	import Botao from '$lib/components/Botao.svelte';
+	import Campo from '$lib/components/Campo.svelte';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
+
+	const entrada =
+		'min-h-12 w-full rounded-[var(--radius-controle)] border border-linha-forte bg-papel px-4 text-tinta placeholder:text-suave/70';
 </script>
 
 <svelte:head>
 	<title>Entrar — Convidai</title>
-	<meta name="description" content="Entre com sua conta Google para criar convites no Convidai." />
+	<meta name="description" content="Entre na sua conta para criar convites no Convidai." />
 </svelte:head>
 
-<main class="flex flex-1 flex-col justify-center gap-10 py-16">
+<main class="flex flex-1 flex-col justify-center gap-8 py-16">
 	<div class="flex flex-col items-center gap-3 text-center">
 		<a href="/" class="font-display text-2xl font-semibold tracking-tight">convidai</a>
 		<h1 class="text-2xl">Faça seu convite e saiba quem vai</h1>
 	</div>
 
-	<form method="POST" class="flex flex-col gap-4">
+	<form method="POST" class="flex flex-col gap-5">
 		<!-- A action do @auth/sveltekit lê o provedor e o retorno destes dois campos do form. -->
+		<input type="hidden" name="providerId" value="credentials" />
+		<input type="hidden" name="redirectTo" value={data.destino} />
+
+		<Campo rotulo="E-mail" para="email" erro={data.erro ?? undefined}>
+			<input
+				id="email"
+				name="email"
+				type="email"
+				required
+				autocomplete="email"
+				placeholder="voce@exemplo.com"
+				class={entrada}
+			/>
+		</Campo>
+
+		<Campo rotulo="Senha" para="senha">
+			<input
+				id="senha"
+				name="senha"
+				type="password"
+				required
+				autocomplete="current-password"
+				class={entrada}
+			/>
+		</Campo>
+
+		<Botao type="submit" largo>Entrar</Botao>
+	</form>
+
+	<p class="text-center text-sm text-suave">
+		Não tem conta?
+		<a
+			href="/cadastrar?destino={encodeURIComponent(data.destino)}"
+			class="underline underline-offset-2 hover:text-terracota">Criar uma</a
+		>
+	</p>
+
+	<div class="flex items-center gap-3">
+		<span class="h-px flex-1 bg-linha"></span>
+		<span class="text-xs text-suave">ou</span>
+		<span class="h-px flex-1 bg-linha"></span>
+	</div>
+
+	<form method="POST" class="flex flex-col gap-4">
 		<input type="hidden" name="providerId" value="google" />
 		<input type="hidden" name="redirectTo" value={data.destino} />
 		<Botao type="submit" tom="secundario" largo>

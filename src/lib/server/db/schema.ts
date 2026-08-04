@@ -16,7 +16,13 @@ export const users = sqliteTable('user', {
 	name: text('name'),
 	email: text('email').unique(),
 	emailVerified: integer('emailVerified', { mode: 'timestamp_ms' }),
-	image: text('image')
+	image: text('image'),
+	/*
+	 * Coluna nossa, fora do contrato do adapter — ele ignora o que não conhece.
+	 * Hash scrypt no formato `scrypt$salt$hash`. Nulo em quem entrou pelo Google
+	 * e nunca definiu senha.
+	 */
+	senha: text('senha')
 });
 
 export const accounts = sqliteTable(

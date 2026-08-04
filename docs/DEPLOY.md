@@ -39,6 +39,23 @@ Config vars: `ORIGIN`, `DATABASE_URL=/app/storage/convidai.db`, `UPLOADS_DIR=/ap
 `BODY_SIZE_LIMIT=12M`, `NODE_ENV`, `AUTH_TRUST_HOST`, `AUTH_SECRET`, `AUTH_GOOGLE_ID`,
 `AUTH_GOOGLE_SECRET`.
 
+`AUTH_SECRET` assina o JWT da sessão. Trocá-lo desloga todo mundo de uma vez — é o
+botão de pânico se algum cookie vazar, e não um valor pra rotacionar por hábito.
+
+## Sessão
+
+A sessão vive num JWT no cookie, não em linha de banco. É o que o provider
+Credentials do Auth.js exige, e foi o preço de aceitar login por e-mail e senha.
+Consequências que não são óbvias:
+
+- A tabela `session` ficou ociosa. Não vale dropar: o `DrizzleAdapter` ainda a
+  declara e o Auth.js reclamaria da falta.
+- Não há como derrubar a sessão de alguém pelo servidor — não existe linha pra
+  apagar. Só o vencimento (30 dias, o padrão do Auth.js) ou a troca do
+  `AUTH_SECRET`.
+- Trocar a senha em `/conta` **não** invalida as sessões abertas em outros
+  dispositivos, pela mesma razão.
+
 ## Google OAuth
 
 O `@auth/sveltekit` usa **`https://convites.celebre.digital/auth/callback/google`** — com o sufixo

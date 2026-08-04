@@ -10,6 +10,24 @@ export async function anfitriaoAtual(event: RequestEvent): Promise<Anfitriao | n
 	return { id: u.id, nome: u.name ?? 'Você', email: u.email ?? '', foto: u.image ?? null };
 }
 
+/**
+ * Só caminho da própria origem vira destino — qualquer outra coisa é tentativa de open redirect.
+ * Comparar prefixos à mão não basta: o parser de URL trata `\` como `/`, então `/\evil.com`
+ * também vira autoridade externa. Resolver contra a origem e exigir mesma origem cobre todas
+ * as variantes de uma vez.
+ */
+export function destinoSeguro(bruto: string | null, origem: string): string {
+	if (!bruto || !bruto.startsWith('/')) return '/visualizar';
+	let alvo: URL;
+	try {
+		alvo = new URL(bruto, origem);
+	} catch {
+		return '/visualizar';
+	}
+	if (alvo.origin !== origem) return '/visualizar';
+	return alvo.pathname + alvo.search;
+}
+
 /** Guarda de rota do Anfitrião. Volta pra página pedida depois do login. */
 export async function exigirAnfitriao(event: RequestEvent): Promise<Anfitriao> {
 	const anfitriao = await anfitriaoAtual(event);

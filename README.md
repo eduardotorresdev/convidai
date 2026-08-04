@@ -11,7 +11,7 @@ aqui. As decisões que parecem bug e não são estão registradas em [docs/adr](
 
 ```sh
 npm install
-cp .env.example .env     # preencha as credenciais do Google
+cp .env.example .env     # AUTH_SECRET basta; as credenciais do Google só pro login com Google
 npm exec -- drizzle-kit push
 npm run dev
 ```
@@ -29,10 +29,12 @@ OAuth do tipo "aplicativo da Web" com:
 | Rota | Quem acessa |
 | --- | --- |
 | `/` | qualquer um — landing |
-| `/entrar` | qualquer um — login com Google |
+| `/entrar` | qualquer um — login por e-mail e senha ou com Google |
+| `/cadastrar` | qualquer um — conta nova com e-mail e senha |
 | `/criar` | Anfitrião logado |
 | `/visualizar` | Anfitrião logado — seus Convites |
 | `/visualizar/[hash]` | só o Anfitrião daquele Convite — Relatório e edição |
+| `/conta` | Anfitrião logado — cria ou troca a própria senha |
 | `/convites/[hash]/[slug]` | qualquer um — o Convite e o RSVP |
 
 O `hash` é a identidade do Convite e nunca muda. O `slug` é enfeite legível: se vier errado na URL,
