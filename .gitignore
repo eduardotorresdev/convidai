@@ -22,8 +22,11 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-.env
-*.db
-*.db-*
-uploads/
+# Barra inicial obrigatoria: sem ela, `uploads/` casa em qualquer profundidade e
+# tambem exclui src/routes/uploads/ — a rota que serve as artes. Ela sumiu do
+# repositorio inteiro assim, e so em producao, porque local o arquivo existia.
+/.env
+/*.db
+/*.db-*
+/uploads/
 
