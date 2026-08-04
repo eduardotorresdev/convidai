@@ -1,9 +1,12 @@
-node_modules
-.svelte-kit
-build
-.git
-.github
-uploads
-*.db
-*.db-*
-.env
+# Os padrões precisam da barra inicial. Sem ela, `uploads` também casa com
+# `src/routes/uploads/` e a rota que serve as artes some da imagem — o arquivo é
+# gravado no volume, mas nada o entrega, e todo convite fica sem imagem.
+/node_modules
+/.svelte-kit
+/build
+/.git
+/.github
+/uploads
+/*.db
+/*.db-*
+/.env
