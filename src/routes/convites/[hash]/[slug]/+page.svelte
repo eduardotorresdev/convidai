@@ -5,7 +5,9 @@
 	import Botao from '$lib/components/Botao.svelte';
 	import Carta from '$lib/components/Carta.svelte';
 	import { formatarPrazo } from '$lib/estado';
+	import { paraHtmlWhatsApp } from '$lib/formatacao';
 	import { caminhoDoConvite } from '$lib/ids';
+	import { cssDoTema } from '$lib/tema';
 	import type { PageProps, SubmitFunction } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -37,10 +39,11 @@
 	const canonica = $derived(page.url.origin + caminhoDoConvite(convite.hash, convite.slug));
 	const imagemAbsoluta = $derived(`${page.url.origin}/uploads/${convite.imagem}`);
 
-	const resumo = $derived(
-		convite.descricao.replace(/\s+/g, ' ').trim().slice(0, 180) ||
-			`Você foi convidado: ${convite.titulo}`
-	);
+	const descricaoFormatada = $derived(paraHtmlWhatsApp(convite.descricao));
+
+	// A arte manda na paleta da página inteira, servida já pintada no HTML: nada
+	// de piscar bege antes de virar a cor do Convite.
+	const estiloDoTema = $derived(cssDoTema(data.tema));
 
 	const ROTULO_RESPOSTA = { sim: 'Vou', nao: 'Não vou' } as const;
 
@@ -56,17 +59,24 @@
 
 <svelte:head>
 	<title>{convite.titulo} · convidai</title>
-	<meta name="description" content={resumo} />
 	<link rel="canonical" href={canonica} />
 
+	<!--
+		Sem og:description de propósito: a descrição já vai no corpo da mensagem
+		compartilhada, e repeti-la no card do WhatsApp mostraria o mesmo texto
+		duas vezes. O card fica com título e arte.
+	-->
 	<meta property="og:title" content={convite.titulo} />
-	<meta property="og:description" content={resumo} />
 	<meta property="og:type" content="website" />
 	<meta property="og:url" content={canonica} />
 	<meta property="og:image" content={imagemAbsoluta} />
 	<meta property="og:image:width" content="1080" />
 	<meta property="og:image:height" content="1080" />
 	<meta name="twitter:card" content="summary_large_image" />
+
+	{#if estiloDoTema}
+		{@html `<style>${estiloDoTema}</style>`}
+	{/if}
 </svelte:head>
 
 <main class="flex flex-1 flex-col gap-8 py-8">
@@ -81,20 +91,25 @@
 	/>
 
 	<header class="flex flex-col gap-3">
-		<h1 class="text-3xl leading-tight">
-			{#if data.nomeConvidado}
-				Oi, {data.nomeConvidado}!
-			{:else}
-				{convite.titulo}
-			{/if}
-		</h1>
-
+		<!--
+			O título não aparece no corpo: a arte já o carrega, e repeti-lo empurra a
+			descrição e os botões para baixo. Ele continua no <title>, no og:title e no
+			alt da arte — é de lá que sai o preview do link no WhatsApp. Quando não há
+			saudação, fica só como cabeçalho para leitor de tela.
+		-->
 		{#if data.nomeConvidado}
-			<p class="text-lg font-medium text-tinta">{convite.titulo}</p>
+			<h1 class="text-3xl leading-tight">Oi, {data.nomeConvidado}!</h1>
+		{:else}
+			<h1 class="sr-only">{convite.titulo}</h1>
 		{/if}
 
+		<!--
+			`@html` é seguro aqui porque `paraHtmlWhatsApp` escapa o texto do Anfitrião
+			antes de qualquer outra coisa e só emite tags próprias. Precisa ser <div>:
+			<ul> e <blockquote> não podem viver dentro de <p>.
+		-->
 		{#if convite.descricao}
-			<p class="text-base/relaxed whitespace-pre-line text-suave">{convite.descricao}</p>
+			<div class="descricao text-base/relaxed text-suave">{@html descricaoFormatada}</div>
 		{/if}
 
 		{#if convite.prazo && !prazoVencido}
@@ -180,6 +195,76 @@
 	</section>
 
 	<footer class="mt-auto pt-6 pb-4 text-center">
-		<a href="/" class="text-xs tracking-wide text-suave hover:text-terracota">convidai</a>
+		<a href="/" class="text-xs tracking-wide text-suave transition-colors hover:text-terracota">
+			Faça seu convite gratuito ·
+			<span class="font-medium">convites.celebre.digital</span>
+		</a>
 	</footer>
 </main>
+
+<!--
+	O HTML da descrição vem de `@html`, então não recebe o hash de escopo do Svelte —
+	daí o `:global()`. O Tailwind aqui está sem o plugin `typography` e o reset zera
+	lista e citação, então cada tag emitida pelo formatador é vestida à mão.
+-->
+<style>
+	.descricao :global(* + p),
+	.descricao :global(p + *),
+	.descricao :global(ul + *),
+	.descricao :global(ol + *),
+	.descricao :global(blockquote + *) {
+		margin-top: 0.75em;
+	}
+
+	.descricao :global(strong) {
+		font-weight: 600;
+		color: var(--color-tinta);
+	}
+
+	.descricao :global(em) {
+		font-style: italic;
+	}
+
+	.descricao :global(s) {
+		text-decoration-line: line-through;
+	}
+
+	.descricao :global(ul),
+	.descricao :global(ol) {
+		padding-left: 1.25rem;
+	}
+
+	.descricao :global(ul) {
+		list-style: disc;
+	}
+
+	.descricao :global(ol) {
+		list-style: decimal;
+	}
+
+	.descricao :global(li + li) {
+		margin-top: 0.25em;
+	}
+
+	.descricao :global(blockquote) {
+		border-left: 3px solid var(--color-linha-forte);
+		padding-left: 0.75rem;
+	}
+
+	.descricao :global(code) {
+		font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+		font-size: 0.9em;
+		background-color: var(--color-terracota-fraca);
+		border-radius: 0.375rem;
+		padding: 0.1em 0.35em;
+	}
+
+	/* O bloco ```mono``` guarda as quebras de linha e não pode estourar a largura no celular. */
+	.descricao :global(code.mono) {
+		display: inline-block;
+		max-width: 100%;
+		overflow-x: auto;
+		white-space: pre-wrap;
+		padding: 0.4em 0.6em;
+	}
+</style>
