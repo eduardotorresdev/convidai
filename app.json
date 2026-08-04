@@ -1,0 +1,9 @@
+{
+  "name": "convidai",
+  "description": "Convites de festa com confirmacao de presenca rastreavel",
+  "scripts": {
+    "dokku": {
+      "predeploy": "node scripts/migrar.mjs"
+    }
+  }
+}

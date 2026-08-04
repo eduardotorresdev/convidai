@@ -1,0 +1,8 @@
+# Zero-downtime check do Dokku: o release novo só assume o tráfego depois que a
+# landing renderizar de verdade. Checar só a porta aberta deixaria passar um
+# container que sobe e quebra no primeiro render.
+WAIT=3
+TIMEOUT=10
+ATTEMPTS=10
+
+/ convidai

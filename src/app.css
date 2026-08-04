@@ -1,0 +1,84 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/fraunces';
+@import '@fontsource-variable/inter';
+
+/*
+ * Convidai — editorial quente e claro.
+ * Paleta e escalas ficam SÓ aqui. Nenhum componente inventa cor ou raio.
+ */
+@theme {
+	/* Superfícies */
+	--color-creme: #fdfbf7;
+	--color-papel: #ffffff;
+	--color-linha: #e8e1d7;
+	--color-linha-forte: #d6ccbd;
+
+	/* Texto — ambos passam AA sobre creme e papel */
+	--color-tinta: #23201c;
+	--color-suave: #6f675e;
+
+	/* Accent: terracota. Contraste 5.06:1 com texto branco. */
+	--color-terracota: #bc4b2a;
+	--color-terracota-forte: #9d3d22;
+	--color-terracota-fraca: #f7ede8;
+
+	/* Estados de resposta */
+	--color-sim: #2f6b4f;
+	--color-sim-fraca: #ecf3ef;
+	--color-nao: #6f675e;
+
+	--font-display: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
+	--font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+
+	--radius-carta: 1rem;
+	--radius-controle: 0.75rem;
+
+	--shadow-carta: 0 1px 2px rgb(35 32 28 / 0.04), 0 8px 24px -12px rgb(35 32 28 / 0.14);
+	--shadow-flutuante: 0 8px 40px -8px rgb(35 32 28 / 0.22);
+}
+
+@layer base {
+	html {
+		background-color: var(--color-creme);
+		color: var(--color-tinta);
+		font-family: var(--font-sans);
+		-webkit-text-size-adjust: 100%;
+	}
+
+	body {
+		min-height: 100dvh;
+	}
+
+	h1,
+	h2,
+	h3 {
+		font-family: var(--font-display);
+		font-weight: 600;
+		letter-spacing: -0.015em;
+		text-wrap: balance;
+	}
+
+	/* Alvo de toque confortável no mobile — este app é mobile-first. */
+	button,
+	a[role='button'],
+	input,
+	textarea,
+	select {
+		font: inherit;
+	}
+
+	:focus-visible {
+		outline: 2px solid var(--color-terracota);
+		outline-offset: 2px;
+		border-radius: 4px;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		*,
+		*::before,
+		*::after {
+			animation-duration: 0.01ms !important;
+			transition-duration: 0.01ms !important;
+		}
+	}
+}
